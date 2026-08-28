@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ticket Market Dashboard</title>
+
+<style>
+:root{
+  --bg:#102414;--panel:#dff1d2;--panel2:#c6e7b7;--ink:#102114;--muted:#4d6a50;
+  --line:#2e5b32;--line2:#173b1d;--green:#7bc64b;--green2:#59a832;--green3:#2f7f2b;
+  --cream:#eff9df;--yellow:#d9e57d;--red:#d88c7c;--blue:#8eb7a2;--shadow:6px 6px 0 #0d1d10
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:"Courier New","Lucida Console",Monaco,monospace;color:var(--ink);
+  background:
+    linear-gradient(rgba(90,160,75,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(90,160,75,.08) 1px,transparent 1px),
+    radial-gradient(circle at 12% 18%,rgba(132,215,93,.12),transparent 23%),
+    radial-gradient(circle at 88% 76%,rgba(86,168,50,.12),transparent 24%),
+    linear-gradient(180deg,#0e2012 0%,#15331a 50%,#102514 100%);
+  background-size:18px 18px,18px 18px,auto,auto,auto;image-rendering:pixelated
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);opacity:.45}
+body::after{content:"";position:fixed;inset:10px;pointer-events:none;border:3px solid #6bb34a;box-shadow:inset 0 0 0 3px #193d1e,inset 0 0 0 6px #9cce72;z-index:0}
+.app{max-width:1500px;margin:0 auto;padding:24px;position:relative;z-index:2}
+.app::before{content:"";position:fixed;left:18px;bottom:22px;width:64px;height:52px;pointer-events:none;z-index:1;background:
+linear-gradient(#92cf67,#92cf67) 10px 14px/42px 24px no-repeat,
+linear-gradient(#183a1c,#183a1c) 6px 10px/50px 32px no-repeat,
+linear-gradient(#d5ee9d,#d5ee9d) 18px 8px/26px 4px no-repeat,
+linear-gradient(#2b6d29,#2b6d29) 20px 20px/22px 12px no-repeat;box-shadow:8px -8px 0 rgba(127,199,85,.25),16px -16px 0 rgba(127,199,85,.12)}
+.app::after{content:"";position:fixed;right:20px;top:100px;width:42px;height:58px;pointer-events:none;z-index:1;background:
+linear-gradient(#8fcb5f,#8fcb5f) 12px 10px/18px 34px no-repeat,
+linear-gradient(#173818,#173818) 8px 6px/26px 42px no-repeat,
+linear-gradient(#d9efaa,#d9efaa) 15px 14px/12px 6px no-repeat,
+linear-gradient(#2f7f2b,#2f7f2b) 15px 24px/12px 12px no-repeat}
+.hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:16px;padding:22px 24px;border:3px solid var(--line2);background:repeating-linear-gradient(90deg,#dff1d2 0 18px,#d7ebc8 18px 36px);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero::before{content:"$";position:absolute;right:24px;top:-8px;font-size:92px;font-weight:900;color:rgba(47,127,43,.10);line-height:1}
+.hero::after{content:"CASH FLOW // MARKET MODE";position:absolute;left:24px;bottom:8px;font-size:9px;letter-spacing:.18em;color:#3f7740}
+.hero h1{margin:0;font-size:clamp(40px,6vw,86px);letter-spacing:-.055em;line-height:.92;font-weight:900;text-transform:uppercase;color:#173b1d;text-shadow:3px 3px 0 #9bce72,6px 6px 0 rgba(16,33,20,.10)}
+.hero p{margin:0 0 14px;color:#4b674f;max-width:520px;font-size:12px;line-height:1.55}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}
+.tab{border:3px solid var(--line2);background:#cfe6bf;padding:10px 16px;border-radius:0;cursor:pointer;font-weight:900;color:#17381a;text-transform:uppercase;letter-spacing:.06em;box-shadow:4px 4px 0 #0d1f10}
+.tab::before{content:"$";margin-right:7px;color:#2f7f2b}
+.tab.active{background:#2f7f2b;color:#eff9df;border-color:#102914;text-shadow:1px 1px 0 #173818}
+.view{display:none}.view.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.kpi{background:linear-gradient(180deg,#eaf7dc,#cce8b8);border:3px solid var(--line2);border-radius:0;padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:repeating-linear-gradient(90deg,#2f7f2b 0 8px,#9fd271 8px 16px)}
+.kpi .v{font-size:32px;line-height:1;margin-bottom:8px;font-weight:900;color:#173b1d;text-shadow:2px 2px 0 #b6dd94}
+.kpi .l{color:#4b684f;font-size:10px;text-transform:uppercase;letter-spacing:.10em;font-weight:700}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+.panel{background:linear-gradient(180deg,#e7f4d9,#cfe7bd);border:3px solid var(--line2);border-radius:0;padding:16px;box-shadow:var(--shadow);position:relative}
+.panel::after{content:"¢";position:absolute;right:10px;top:4px;color:#2e7030;font-size:16px;font-weight:900}
+.panel h3{margin:0 0 14px;padding-left:16px;font-size:13px;text-transform:uppercase;letter-spacing:.10em;color:#1c4a21}
+.panel h3::before{content:"$ ";color:#2f7f2b}
+.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+input,select,button{font:inherit}
+input,select{width:100%;padding:9px 11px;border:2px solid #49774b;border-radius:0;background:#f0f8e8;color:#17381a}
+.table-wrap{overflow:auto;border:3px solid var(--line2);border-radius:0;background:#edf8e5;box-shadow:inset 0 0 0 3px #c4e2b3}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+th,td{padding:9px 10px;border-bottom:1px solid #b9d4ab;border-right:1px solid #c8dfbb;font-size:11px;white-space:nowrap}
+th{background:repeating-linear-gradient(90deg,#98cc6e 0 16px,#8bc060 16px 32px);color:#17381a;position:sticky;top:0;z-index:2;text-transform:uppercase;letter-spacing:.05em;font-size:9px;font-weight:900}
+tbody tr:nth-child(even) td{background:#e4f2d8}tbody tr:hover td{background:#d4ebc3}
+.badge{display:inline-flex;align-items:center;padding:4px 7px;border-radius:0;border:1px solid #335d35;font-weight:900;font-size:10px;box-shadow:2px 2px 0 rgba(21,51,24,.18)}
+.strong{background:#9ed06f}.moderate{background:#d8de7d}.very{background:#6fbc50}.low{background:#b7c8a9}.questionable{background:#cf8b7d}.available{background:#a7d77c}.limited{background:#d9e57d}.resale{background:#91b9a0}.sold{background:#c78176}
+.chart{min-height:300px}
+canvas{width:100%;height:300px;display:block;background:linear-gradient(rgba(45,89,48,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(45,89,48,.06) 1px,transparent 1px),#eef8e7;background-size:16px 16px;border:2px solid #4d744c}
+.genre-grid{display:grid;gap:8px}
+.genre-row{display:grid;grid-template-columns:1fr 1fr .7fr;gap:10px;align-items:center;padding:11px 13px;border:2px solid #4b744c;border-radius:0;cursor:pointer;background:#eaf6df;box-shadow:3px 3px 0 rgba(24,61,29,.12)}
+.genre-row:hover{background:#d8edc8}
+.genre-row strong{font-size:13px}.genre-row span{font-size:12px;color:#526d55}
+.evaluator{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.evaluator label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#416246;font-weight:700}
+.result{margin-top:14px;border-radius:0;padding:14px;background:#bddda7;border:3px solid var(--line2);box-shadow:inset 0 0 0 3px rgba(255,255,255,.22)}
+.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.result-item{background:#edf8e5;border:2px solid #4c764d;border-radius:0;padding:11px;position:relative}
+.result-item::after{content:"$";position:absolute;right:7px;top:4px;color:#6ba452;font-weight:900}
+.result-item small{display:block;color:#567159;margin-bottom:4px;font-size:9px;text-transform:uppercase}
+.result-item b{font-size:17px;color:#183d1d}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{border:3px solid var(--line2);background:#ddefce;border-radius:0;padding:8px 11px;cursor:pointer;font-weight:900;color:#17381a;box-shadow:3px 3px 0 #0e2111;text-transform:uppercase;font-size:10px}
+.btn::before{content:"$ ";color:#2f7f2b}
+.note{color:#4f6d53;font-size:11px}
+@media(max-width:1050px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.filters{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.app{padding:14px}.kpis{grid-template-columns:1fr}.filters,.evaluator,.result-grid{grid-template-columns:1fr}}
+
+/* ARTIST LOOKUP / DETAILED PROFILE */
+.artist-lookup{
+  margin:0 0 18px;
+  border:3px solid var(--line2);
+  background:linear-gradient(180deg,#e9f6df,#cfe7bd);
+  box-shadow:var(--shadow);
+  padding:16px;
+  position:relative;
+}
+.artist-lookup::before{
+  content:"ARTIST TERMINAL";
+  position:absolute;
+  right:12px;
+  top:8px;
+  font-size:9px;
+  letter-spacing:.16em;
+  color:#3f7740;
+}
+.artist-lookup h3{
+  margin:0 0 12px;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.10em;
+  color:#1c4a21;
+}
+.artist-lookup h3::before{content:"$ ";color:#2f7f2b}
+.artist-search-row{
+  display:grid;
+  grid-template-columns:minmax(220px,1.2fr) auto;
+  gap:8px;
+  align-items:end;
+}
+.artist-search-row label{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:#416246;
+  font-weight:700;
+}
+.artist-search-row label::before{content:"> ";color:#2f7f2b}
+.artist-suggestions{
+  margin-top:8px;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.artist-chip{
+  border:2px solid #416d43;
+  background:#dff0d2;
+  color:#17381a;
+  padding:5px 8px;
+  font-size:9px;
+  cursor:pointer;
+  box-shadow:2px 2px 0 rgba(14,33,17,.18);
+}
+.artist-chip:hover{background:#c8e4b7}
+.artist-profile{
+  margin-top:14px;
+  border:3px solid var(--line2);
+  background:#bcdcaa;
+  padding:12px;
+}
+.artist-profile-head{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-start;
+  margin-bottom:10px;
+}
+.artist-profile-head .name{
+  font-size:24px;
+  font-weight:900;
+  color:#173b1d;
+  text-transform:uppercase;
+  text-shadow:2px 2px 0 #a9d682;
+}
+.artist-profile-head .meta{
+  color:#49664d;
+  font-size:10px;
+  text-align:right;
+  line-height:1.5;
+}
+.artist-stat-grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:8px;
+}
+.artist-stat{
+  background:#edf8e5;
+  border:2px solid #4c764d;
+  padding:10px;
+  position:relative;
+}
+.artist-stat::after{
+  content:"$";
+  position:absolute;
+  right:6px;
+  top:3px;
+  color:#6ba452;
+  font-weight:900;
+}
+.artist-stat small{
+  display:block;
+  color:#567159;
+  text-transform:uppercase;
+  font-size:8px;
+  line-height:1.25;
+  margin-bottom:5px;
+}
+.artist-stat b{
+  display:block;
+  color:#183d1d;
+  font-size:15px;
+}
+.artist-detail-grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:8px;
+  margin-top:8px;
+}
+.artist-detail-box{
+  background:#edf8e5;
+  border:2px solid #4c764d;
+  padding:10px;
+}
+.artist-detail-box h4{
+  margin:0 0 8px;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#2d6330;
+}
+.artist-event-list{
+  display:grid;
+  gap:5px;
+  max-height:170px;
+  overflow:auto;
+}
+.artist-event{
+  display:grid;
+  grid-template-columns:1fr .8fr .75fr .75fr .7fr;
+  gap:6px;
+  align-items:center;
+  padding:6px 7px;
+  background:#e2f0d7;
+  border:1px solid #76966e;
+  font-size:9px;
+}
+.artist-mini-list{
+  display:grid;
+  gap:5px;
+}
+.artist-mini-row{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  border-bottom:1px solid #c0d9b3;
+  padding-bottom:4px;
+  font-size:9px;
+}
+.artist-empty{
+  padding:18px;
+  border:2px dashed #5c835c;
+  color:#4d6a50;
+  text-align:center;
+  background:#e9f5df;
+  font-size:10px;
+}
+@media(max-width:1100px){
+  .artist-stat-grid{grid-template-columns:repeat(3,1fr)}
+  .artist-detail-grid{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+  .artist-search-row{grid-template-columns:1fr}
+  .artist-stat-grid{grid-template-columns:1fr 1fr}
+  .artist-event{grid-template-columns:1fr 1fr}
+}
+
+</style>
+
+</head>
+<body>
+<div class="app">
+  <div class="hero">
+    <div>
+      <h1>Ticket Market Data</h1>
+    </div>
+    <p>Interactive resale-market research dashboard for comparing primary prices, secondary-market premiums, demand, availability, venue scale, and opportunity quality.</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">Market Overview</button>
+    <button class="tab" data-tab="research">Ticket Research</button>
+    <button class="tab" data-tab="insights">Market Insights</button>
+  </div>
+
+  <section id="overview" class="view active">
+
+    <div class="artist-lookup">
+      <h3>Artist Market Lookup</h3>
+      <div class="artist-search-row">
+        <label>Type an Artist Name
+          <input id="artistLookupInput" list="artistLookupList" placeholder="Example: Drake, Taylor Swift, SZA">
+          <datalist id="artistLookupList"></datalist>
+        </label>
+        <button class="btn" id="artistLookupBtn">View Artist Stats</button>
+      </div>
+      <div class="artist-suggestions" id="artistSuggestions"></div>
+      <div class="artist-profile" id="artistProfile">
+        <div class="artist-empty">Type an artist name above to view their market statistics, pricing, premium, demand, availability, venues, cities, and researched events.</div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="kEvents">30</div><div class="l">Events Researched</div></div>
+      <div class="kpi"><div class="v" id="kPrimary">$160.24</div><div class="l">Average Primary Price</div></div>
+      <div class="kpi"><div class="v" id="kResale">$248.05</div><div class="l">Average Resale Price</div></div>
+      <div class="kpi"><div class="v" id="kPremium">54.8%</div><div class="l">Average Resale Premium</div></div>
+      <div class="kpi"><div class="v" id="kStrong">0</div><div class="l">Strong+ Opportunities</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h3>Market Opportunity Evaluator</h3>
+        <div class="evaluator">
+          <label>Primary Price<input id="ePrimary" type="number" value="175"></label>
+          <label>Resale Price<input id="eResale" type="number" value="270"></label>
+          <label>Demand Index<input id="eDemand" type="number" step=".25" value="9.25"></label>
+          <label>Availability<select id="eAvail"><option>Available</option><option selected>Limited</option><option>Resale Only</option><option>Sold Out</option></select></label>
+          <label>Venue Capacity<input id="eCapacity" type="number" value="18000"></label>
+          <label>Days Until Event<input id="eDays" type="number" value="36"></label>
+        </div>
+        <div class="result" id="evalResult"></div>
+      </div>
+
+      <div class="panel chart">
+        <h3>Average Premium by Genre</h3>
+        <canvas id="genreChart" width="600" height="320"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section id="research" class="view">
+    <div class="panel">
+      <h3>Ticket Research Database</h3>
+      <div class="filters">
+        <input id="searchArtist" placeholder="Search artist or city">
+        <select id="filterGenre"><option value="">All Genres</option></select>
+        <select id="filterRating"><option value="">All Ratings</option></select>
+        <select id="filterAvailability"><option value="">All Availability</option></select>
+        <select id="filterCity"><option value="">All Cities</option></select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Research Date</th><th>Artist</th><th>Venue</th><th>City</th><th>Genre</th>
+              <th>Primary Price</th><th>Resale Price</th><th>Resale Premium</th><th>Demand Index</th>
+              <th>Opportunity Rating</th><th>Ticket Availability</th><th>Venue Capacity</th><th>Days Until Event</th>
+            </tr>
+          </thead>
+          <tbody id="researchBody"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button class="btn" id="resetFilters">Reset Filters</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="insights" class="view">
+    <div class="grid">
+      <div class="panel">
+        <h3>Genre Performance</h3>
+        <div class="genre-grid" id="genreGrid"></div>
+        <div class="note" style="margin-top:10px">Click a genre to jump to the research table filtered to that market.</div>
+      </div>
+      <div class="panel">
+        <h3>Opportunity Distribution</h3>
+        <canvas id="ratingChart" width="600" height="320"></canvas>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const rows = [
+{d:'2/4/2026',a:'Taylor Swift',v:'DCA',c:'Las Vegas',g:'Pop',p:310,r:575,di:7.25,o:'Strong',av:'Sold Out',cap:65000,days:47},
+{d:'2/4/2026',a:'Drake',v:'SC',c:'Denver',g:'Hip-Hop',p:185,r:285,di:10.25,o:'Strong',av:'Resale Only',cap:19500,days:63},
+{d:'2/9/2026',a:'Beyoncé',v:'PHA',c:'Los Angeles',g:'R&B',p:240,r:395,di:7.25,o:'Very Strong',av:'Resale Only',cap:70000,days:81},
+{d:'2/9/2026',a:'Bad Bunny',v:'CSP',c:'Phoenix',g:'Hip-Hop',p:205,r:330,di:9.25,o:'Strong',av:'Limited',cap:18300,days:36},
+{d:'2/10/2026',a:'The Weeknd',v:'LSEC',c:'Dallas',g:'R&B',p:195,r:305,di:7.25,o:'Strong',av:'Limited',cap:65000,days:94},
+{d:'2/10/2026',a:'Morgan Wallen',v:'ECA',c:'Seattle',g:'Country',p:175,r:270,di:7.25,o:'Moderate',av:'Limited',cap:72000,days:108},
+{d:'2/10/2026',a:'Billie Eilish',v:'RC',c:'Portland',g:'Pop',p:165,r:255,di:12.50,o:'Moderate',av:'Limited',cap:17500,days:29},
+{d:'2/10/2026',a:'Bruno Mars',v:'SA',c:'Irvine',g:'Pop',p:215,r:345,di:10.25,o:'Strong',av:'Available',cap:5200,days:54},
+{d:'2/10/2026',a:'SZA',v:'ALC',c:'Austin',g:'R&B',p:145,r:245,di:7.25,o:'Moderate',av:'Available',cap:17800,days:42},
+{d:'2/10/2026',a:'Travis Scott',v:'RRA',c:'Las Vegas',g:'Hip-Hop',p:170,r:270,di:7.25,o:'Strong',av:'Sold Out',cap:17800,days:42},
+{d:'2/11/2026',a:'Post Malone',v:'GCP',c:'Houston',g:'Pop',p:150,r:220,di:12.50,o:'Moderate',av:'Available',cap:17800,days:56},
+{d:'2/11/2026',a:'Ariana Grande',v:'CLC',c:'Raleigh',g:'Pop',p:220,r:350,di:7.25,o:'Strong',av:'Limited',cap:20000,days:49},
+{d:'2/11/2026',a:'Chris Brown',v:'PA',c:'Atlanta',g:'R&B',p:155,r:235,di:9.25,o:'Moderate',av:'Limited',cap:18600,days:61},
+{d:'2/12/2026',a:'Doja Cat',v:'SSA',c:'Orlando',g:'Pop',p:135,r:195,di:7.25,o:'Strong',av:'Resale Only',cap:19500,days:35},
+{d:'2/12/2026',a:'Zach Bryan',v:'ACC',c:'Miami',g:'Country',p:160,r:250,di:7.25,o:'Strong',av:'Available',cap:68000,days:67},
+{d:'2/12/2026',a:'Lady Gaga',v:'LA',c:'Scottsdale',g:'Pop',p:205,r:320,di:10.25,o:'Questionable',av:'Available',cap:5200,days:24},
+{d:'2/12/2026',a:'Dua Lipa',v:'ESEC',c:'New York',g:'Pop',p:155,r:235,di:9.25,o:'Moderate',av:'Available',cap:18200,days:27},
+{d:'2/20/2026',a:'Karol G',v:'SCC',c:'Pittsburgh',g:'Pop',p:170,r:270,di:7.25,o:'Moderate',av:'Available',cap:65000,days:234},
+{d:'2/20/2026',a:'Zach Bryan',v:'BP',c:'Columbus',g:'Country',p:160,r:250,di:9.25,o:'Low',av:'Limited',cap:68000,days:57},
+{d:'2/20/2026',a:'Hozier',v:'CDA',c:'Washington',g:'Rock/Alternative',p:125,r:185,di:9.25,o:'Strong',av:'Available',cap:14500,days:99},
+{d:'2/20/2026',a:'Playboi Carti',v:'BA',c:'Columbus',g:'Hip-Hop',p:135,r:220,di:9.25,o:'Low',av:'Limited',cap:15000,days:16},
+{d:'2/20/2026',a:'Usher',v:'RP',c:'Louisville',g:'R&B',p:165,r:255,di:10.25,o:'Strong',av:'Resale Only',cap:5200,days:34},
+{d:'2/20/2026',a:'Maroon 5',v:'MCC',c:'Nashville',g:'Pop',p:135,r:185,di:9.25,o:'Strong',av:'Resale Only',cap:12000,days:56},
+{d:'2/20/2026',a:'Pitbull',v:'SA',c:'Irvine',g:'Pop',p:95,r:130,di:7.25,o:'Very Strong',av:'Available',cap:15500,days:78},
+{d:'2/26/2026',a:'Coldplay',v:'BHA',c:'Brooklyn',g:'Rock/Alternative',p:190,r:315,di:7.25,o:'Strong',av:'Limited',cap:75000,days:33},
+{d:'2/26/2026',a:'Luke Combs',v:'BHP',c:'Tampa',g:'Country',p:145,r:315,di:7.25,o:'Strong',av:'Available',cap:69000,days:32},
+{d:'2/26/2026',a:'Imagine Dragons',v:'ACA',c:'San Antonio',g:'Rock/Alternative',p:125,r:175,di:9.25,o:'Moderate',av:'Limited',cap:22000,days:35},
+{d:'2/26/2026',a:'Ed Sheeran',v:'QCP',c:'Charlotte',g:'Pop',p:140,r:175,di:9.25,o:'Strong',av:'Available',cap:71000,days:52},
+{d:'2/26/2026',a:'Zach Bryan',v:'GLA',c:'Detroit',g:'Country',p:160,r:250,di:9.25,o:'Moderate',av:'Limited',cap:68000,days:45},
+{d:'2/26/2026',a:'Morgan Wallen',v:'CCA',c:'New Orleans',g:'Country',p:175,r:270,di:7.25,o:'Moderate',av:'Available',cap:72000,days:67}
+].map((x,i)=>({...x,id:i+1,prem:(x.r-x.p)/x.p*100}));
+
+const money=n=>'$'+n.toFixed(2);
+const pct=n=>n.toFixed(2)+'%';
+
+document.querySelectorAll('.tab').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
+  };
+});
+
+function clsRating(r){
+  return r==='Very Strong'?'very':r==='Strong'?'strong':r==='Moderate'?'moderate':r==='Low'?'low':'questionable';
+}
+function clsAvail(a){
+  return a==='Available'?'available':a==='Limited'?'limited':a==='Resale Only'?'resale':'sold';
+}
+function updateKPIs(data=rows){
+  document.getElementById('kEvents').textContent=data.length;
+  document.getElementById('kPrimary').textContent=money(data.reduce((a,b)=>a+b.p,0)/data.length);
+  document.getElementById('kResale').textContent=money(data.reduce((a,b)=>a+b.r,0)/data.length);
+  document.getElementById('kPremium').textContent=pct(data.reduce((a,b)=>a+b.prem,0)/data.length);
+  document.getElementById('kStrong').textContent=data.filter(x=>['Strong','Very Strong'].includes(x.o)).length;
+}
+updateKPIs();
+
+const genres=[...new Set(rows.map(x=>x.g))];
+const ratings=[...new Set(rows.map(x=>x.o))];
+const avails=[...new Set(rows.map(x=>x.av))];
+const cities=[...new Set(rows.map(x=>x.c))].sort();
+
+function fillSelect(id,vals){
+  const s=document.getElementById(id);
+  vals.forEach(v=>s.innerHTML+=`<option>${v}</option>`);
+}
+fillSelect('filterGenre',genres);fillSelect('filterRating',ratings);fillSelect('filterAvailability',avails);fillSelect('filterCity',cities);
+
+function renderTable(){
+  const q=document.getElementById('searchArtist').value.toLowerCase();
+  const g=document.getElementById('filterGenre').value;
+  const r=document.getElementById('filterRating').value;
+  const a=document.getElementById('filterAvailability').value;
+  const c=document.getElementById('filterCity').value;
+  const data=rows.filter(x=>
+    (!q || x.a.toLowerCase().includes(q)||x.c.toLowerCase().includes(q)) &&
+    (!g||x.g===g)&&(!r||x.o===r)&&(!a||x.av===a)&&(!c||x.c===c)
+  );
+  document.getElementById('researchBody').innerHTML=data.map(x=>`
+  <tr>
+    <td>${x.id}</td><td>${x.d}</td><td><b>${x.a}</b></td><td>${x.v}</td><td>${x.c}</td><td>${x.g}</td>
+    <td>${money(x.p)}</td><td>${money(x.r)}</td><td>${pct(x.prem)}</td><td>${x.di.toFixed(2)}</td>
+    <td><span class="badge ${clsRating(x.o)}">${x.o}</span></td>
+    <td><span class="badge ${clsAvail(x.av)}">${x.av}</span></td>
+    <td>${x.cap.toLocaleString()}</td><td>${x.days}</td>
+  </tr>`).join('');
+}
+['searchArtist','filterGenre','filterRating','filterAvailability','filterCity'].forEach(id=>document.getElementById(id).addEventListener('input',renderTable));
+document.getElementById('resetFilters').onclick=()=>{
+  ['searchArtist','filterGenre','filterRating','filterAvailability','filterCity'].forEach(id=>document.getElementById(id).value='');
+  renderTable();
+};
+renderTable();
+
+function getGenreStats(){
+  return genres.map(g=>{
+    const d=rows.filter(x=>x.g===g);
+    return {g,avg:d.reduce((a,b)=>a+b.prem,0)/d.length,count:d.length};
+  }).sort((a,b)=>b.avg-a.avg);
+}
+function drawBar(canvasId,labels,values){
+  const c=document.getElementById(canvasId),ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const pad=55,w=c.width-pad*2,h=c.height-70,max=Math.max(...values)*1.15;
+  ctx.font='12px Courier New';ctx.fillStyle='#4d6a50';ctx.textAlign='right';
+  values.forEach((v,i)=>{
+    const y=30+i*(h/values.length);
+    const bh=(h/values.length)-14;
+    ctx.fillStyle='#73b84d';ctx.fillRect(pad,y,(v/max)*w,bh);
+    ctx.fillStyle='#173b1d';ctx.textAlign='left';ctx.fillText(labels[i],8,y+bh/2+4);
+    ctx.textAlign='right';ctx.fillText((typeof v==='number'?v.toFixed(1):v),pad+(v/max)*w-6,y+bh/2+4);
+  });
+}
+const gs=getGenreStats();
+drawBar('genreChart',gs.map(x=>x.g),gs.map(x=>x.avg));
+
+const rg={};rows.forEach(x=>rg[x.o]=(rg[x.o]||0)+1);
+drawBar('ratingChart',Object.keys(rg),Object.values(rg));
+
+document.getElementById('genreGrid').innerHTML=gs.map(x=>`
+<div class="genre-row" data-genre="${x.g}">
+  <strong>${x.g}</strong><span>${pct(x.avg)} avg premium</span><span>${x.count} researched</span>
+</div>`).join('');
+document.querySelectorAll('.genre-row').forEach(el=>el.onclick=()=>{
+  document.querySelector('[data-tab="research"]').click();
+  document.getElementById('filterGenre').value=el.dataset.genre;
+  renderTable();
+});
+
+
+const artistNames=[...new Set(rows.map(x=>x.a))].sort();
+document.getElementById('artistLookupList').innerHTML=artistNames.map(a=>`<option value="${a}">`).join('');
+
+const featuredArtists=artistNames.slice(0,8);
+document.getElementById('artistSuggestions').innerHTML=
+  featuredArtists.map(a=>`<button class="artist-chip" data-artist="${a}">$ ${a}</button>`).join('');
+
+function availabilitySummary(data){
+  const counts={};
+  data.forEach(x=>counts[x.av]=(counts[x.av]||0)+1);
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+}
+
+function renderArtistProfile(name){
+  const q=(name||'').trim().toLowerCase();
+  const exact=rows.filter(x=>x.a.toLowerCase()===q);
+  const partial=rows.filter(x=>x.a.toLowerCase().includes(q));
+  const data=exact.length?exact:partial;
+  const box=document.getElementById('artistProfile');
+
+  if(!q || !data.length){
+    box.innerHTML=`<div class="artist-empty">No matching artist was found in the current research database. Try a name from the Ticket Research table.</div>`;
+    return;
+  }
+
+  const displayName=data[0].a;
+  const avgPrimary=data.reduce((s,x)=>s+x.p,0)/data.length;
+  const avgResale=data.reduce((s,x)=>s+x.r,0)/data.length;
+  const avgPremium=data.reduce((s,x)=>s+x.prem,0)/data.length;
+  const avgDemand=data.reduce((s,x)=>s+x.di,0)/data.length;
+  const best=[...data].sort((a,b)=>b.prem-a.prem)[0];
+  const strongest=[...data].sort((a,b)=>{
+    const rank={'Very Strong':5,'Strong':4,'Moderate':3,'Low':2,'Questionable':1};
+    return rank[b.o]-rank[a.o];
+  })[0];
+  const cities=[...new Set(data.map(x=>x.c))];
+  const venues=[...new Set(data.map(x=>x.v))];
+  const avail=availabilitySummary(data);
+
+  box.innerHTML=`
+    <div class="artist-profile-head">
+      <div>
+        <div class="name">${displayName}</div>
+        <div style="font-size:9px;color:#4d6a50;margin-top:4px">${data[0].g} MARKET PROFILE</div>
+      </div>
+      <div class="meta">${data.length} researched event${data.length===1?'':'s'}<br>${cities.length} market${cities.length===1?'':'s'} / ${venues.length} venue${venues.length===1?'':'s'}</div>
+    </div>
+
+    <div class="artist-stat-grid">
+      <div class="artist-stat"><small>Average Primary</small><b>${money(avgPrimary)}</b></div>
+      <div class="artist-stat"><small>Average Resale</small><b>${money(avgResale)}</b></div>
+      <div class="artist-stat"><small>Average Premium</small><b>${pct(avgPremium)}</b></div>
+      <div class="artist-stat"><small>Average Demand</small><b>${avgDemand.toFixed(2)}</b></div>
+      <div class="artist-stat"><small>Best Premium</small><b>${pct(best.prem)}</b></div>
+      <div class="artist-stat"><small>Top Rating</small><b>${strongest.o}</b></div>
+    </div>
+
+    <div class="artist-detail-grid">
+      <div class="artist-detail-box">
+        <h4>Researched Events</h4>
+        <div class="artist-event-list">
+          ${data.map(x=>`
+            <div class="artist-event">
+              <span><b>${x.c}</b><br>${x.v}</span>
+              <span>Primary<br><b>${money(x.p)}</b></span>
+              <span>Resale<br><b>${money(x.r)}</b></span>
+              <span>Premium<br><b>${pct(x.prem)}</b></span>
+              <span>${x.o}<br>${x.av}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="artist-detail-box">
+        <h4>Market Snapshot</h4>
+        <div class="artist-mini-list">
+          <div class="artist-mini-row"><span>Genre</span><b>${data[0].g}</b></div>
+          <div class="artist-mini-row"><span>Cities</span><b>${cities.join(', ')}</b></div>
+          <div class="artist-mini-row"><span>Venues</span><b>${venues.join(', ')}</b></div>
+          <div class="artist-mini-row"><span>Highest Resale</span><b>${money(Math.max(...data.map(x=>x.r)))}</b></div>
+          <div class="artist-mini-row"><span>Lowest Primary</span><b>${money(Math.min(...data.map(x=>x.p)))}</b></div>
+          ${avail.map(([k,v])=>`<div class="artist-mini-row"><span>${k}</span><b>${v}</b></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('artistLookupBtn').onclick=()=>renderArtistProfile(document.getElementById('artistLookupInput').value);
+document.getElementById('artistLookupInput').addEventListener('change',e=>renderArtistProfile(e.target.value));
+document.getElementById('artistLookupInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter') renderArtistProfile(e.target.value);
+});
+document.querySelectorAll('.artist-chip').forEach(b=>b.onclick=()=>{
+  document.getElementById('artistLookupInput').value=b.dataset.artist;
+  renderArtistProfile(b.dataset.artist);
+});
+
+
+function evaluate(){
+  const p=+document.getElementById('ePrimary').value||0;
+  const r=+document.getElementById('eResale').value||0;
+  const d=+document.getElementById('eDemand').value||0;
+  const av=document.getElementById('eAvail').value;
+  const cap=+document.getElementById('eCapacity').value||0;
+  const days=+document.getElementById('eDays').value||0;
+  const premium=p?((r-p)/p*100):0;
+  let score=0;
+  if(premium>=60) score+=3; else if(premium>=50) score+=2; else if(premium>=35) score+=1;
+  if(d>=10) score+=2; else if(d>=8) score+=1;
+  if(av==='Sold Out') score+=2; else if(av==='Resale Only') score+=2; else if(av==='Limited') score+=1;
+  if(cap>=50000) score+=1;
+  if(days<=45) score+=1;
+  let rating=score>=7?'Very Strong':score>=5?'Strong':score>=3?'Moderate':score>=2?'Low':'Questionable';
+  document.getElementById('evalResult').innerHTML=`
+    <div class="result-grid">
+      <div class="result-item"><small>Resale Premium</small><b>${pct(premium)}</b></div>
+      <div class="result-item"><small>Opportunity Rating</small><b>${rating}</b></div>
+      <div class="result-item"><small>Market Pressure</small><b>${av}</b></div>
+      <div class="result-item"><small>Lead Time</small><b>${days} days</b></div>
+    </div>`;
+}
+['ePrimary','eResale','eDemand','eAvail','eCapacity','eDays'].forEach(id=>document.getElementById(id).addEventListener('input',evaluate));
+evaluate();
+</script>
+</body>
+</html>
